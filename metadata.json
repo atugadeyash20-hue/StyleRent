@@ -1,0 +1,6 @@
+{
+  "name": "Style-Rent - Online Clothing Rental Platform",
+  "description": "Discover, rent, and return designer ethnic & western outfits for weddings, college events, festivals, and celebrations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
