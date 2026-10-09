@@ -14,9 +14,12 @@ import {
   Gender, 
   Size,
   FittingOption,
-  CustomMeasurements
+  CustomMeasurements,
+  RentalDuration,
+  UserMembership,
+  MembershipPlan
 } from './types';
-import { calculateRentalDates } from './utils/rentalCalculations';
+import { calculateRentalDates, getProductRentalFee } from './utils/rentalCalculations';
 
 // Components
 import { Navbar } from './components/Navbar';
@@ -27,6 +30,8 @@ import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { OrderConfirmationModal } from './components/OrderConfirmationModal';
 import { AdminDashboard } from './components/AdminDashboard';
+import { DeliveryTrackerModal } from './components/DeliveryTrackerModal';
+import { MembershipModal } from './components/MembershipModal';
 import { HowItWorksSection } from './components/HowItWorksSection';
 import { ReviewsSection } from './components/ReviewsSection';
 import { WishlistDrawer } from './components/WishlistDrawer';
@@ -99,6 +104,15 @@ export default function App() {
     return ['SR-M01', 'SR-F01', 'SR-C01'];
   });
 
+  // State: User Membership (StylePass Royalty Club)
+  const [userMembership, setUserMembership] = useState<UserMembership | null>(() => {
+    const saved = localStorage.getItem('style_rent_membership_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+    }
+    return null;
+  });
+
   // UI Modals and Drawers
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -106,6 +120,9 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isMembershipOpen, setIsMembershipOpen] = useState(false);
+  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+  const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
 
   // Search & Filter State
@@ -138,6 +155,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('style_rent_wishlist', JSON.stringify(wishlistIds));
   }, [wishlistIds]);
+
+  useEffect(() => {
+    if (userMembership) {
+      localStorage.setItem('style_rent_membership_v1', JSON.stringify(userMembership));
+    } else {
+      localStorage.removeItem('style_rent_membership_v1');
+    }
+  }, [userMembership]);
 
   // Deep-link support: open product or share modal from URL hash
   useEffect(() => {
@@ -191,7 +216,7 @@ export default function App() {
     selectedSize: Size;
     fittingOption: FittingOption;
     customMeasurements?: CustomMeasurements;
-    rentalDuration: 3 | 7 | 10;
+    rentalDuration: RentalDuration;
     startDate: string;
     hasBackupSize: boolean;
     backupSize?: Size;
@@ -201,11 +226,7 @@ export default function App() {
   }) => {
     const { deliveryDate, returnDate } = calculateRentalDates(config.startDate, config.rentalDuration);
     
-    const rentalFee = config.rentalDuration === 3 
-      ? config.product.rentalPrice3Days 
-      : config.rentalDuration === 7 
-        ? config.product.rentalPrice7Days 
-        : config.product.rentalPrice10Days;
+    const rentalFee = getProductRentalFee(config.product, config.rentalDuration);
 
     const newCartItem: CartItem = {
       cartItemId: `CART-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -229,6 +250,27 @@ export default function App() {
     };
 
     setCartItems(prev => [newCartItem, ...prev]);
+  };
+
+  // Membership Handlers
+  const handleActivateMembership = (plan: MembershipPlan) => {
+    const expiresDate = new Date();
+    expiresDate.setFullYear(expiresDate.getFullYear() + 1);
+
+    setUserMembership({
+      isActive: true,
+      planId: plan.id,
+      planName: plan.name,
+      tier: plan.tier,
+      startedAt: new Date().toISOString(),
+      expiresAt: expiresDate.toISOString(),
+      totalSavedAmount: 3200,
+      rentalsCompleted: 0,
+    });
+  };
+
+  const handleCancelMembership = () => {
+    setUserMembership(null);
   };
 
   // Remove Item from Cart
@@ -298,6 +340,7 @@ export default function App() {
     setCartItems([]);
     setIsCheckoutOpen(false);
     setConfirmedOrder(newOrder);
+    setTrackedOrder(newOrder);
   };
 
   // Admin: Update order status
@@ -442,6 +485,12 @@ export default function App() {
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenShare={() => setIsShareOpen(true)}
+        onOpenMembership={() => setIsMembershipOpen(true)}
+        onOpenTracking={() => {
+          setTrackedOrder(orders[0] || null);
+          setIsTrackerOpen(true);
+        }}
+        userMembership={userMembership}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onNavigateSection={handleNavigateSection}
@@ -859,6 +908,11 @@ export default function App() {
         onNavigateSection={handleNavigateSection}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenShare={() => setIsShareOpen(true)}
+        onOpenMembership={() => setIsMembershipOpen(true)}
+        onOpenTracking={() => {
+          setTrackedOrder(orders[0] || null);
+          setIsTrackerOpen(true);
+        }}
         onFilterCategory={handleSelectCategory}
       />
 
@@ -880,12 +934,17 @@ export default function App() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
+        userMembership={userMembership}
         onRemoveItem={handleRemoveCartItem}
         onToggleProtection={handleToggleCartItemProtection}
         onToggleBackup={handleToggleCartItemBackup}
         onProceedCheckout={() => {
           setIsCartOpen(false);
           setIsCheckoutOpen(true);
+        }}
+        onOpenMembership={() => {
+          setIsCartOpen(false);
+          setIsMembershipOpen(true);
         }}
       />
 
@@ -903,7 +962,9 @@ export default function App() {
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         items={cartItems}
+        userMembership={userMembership}
         onOrderCompleted={handleOrderCompleted}
+        onOpenMembership={() => setIsMembershipOpen(true)}
       />
 
       {/* 5. Order Confirmation Modal */}
@@ -913,6 +974,10 @@ export default function App() {
         onOpenAdmin={() => {
           setConfirmedOrder(null);
           setIsAdminOpen(true);
+        }}
+        onOpenTracking={() => {
+          setTrackedOrder(confirmedOrder);
+          setIsTrackerOpen(true);
         }}
       />
 
@@ -925,9 +990,31 @@ export default function App() {
         onUpdateOrderStatus={handleUpdateOrderStatus}
         onUpdateProductStatus={handleUpdateProductStatus}
         onProcessInspection={handleProcessInspection}
+        onOpenTrackingWithOrder={(order) => {
+          setTrackedOrder(order);
+          setIsTrackerOpen(true);
+        }}
       />
 
-      {/* 7. Share & Public Access Modal */}
+      {/* 7. Live Delivery & GPS Tracking Modal */}
+      <DeliveryTrackerModal
+        isOpen={isTrackerOpen}
+        onClose={() => setIsTrackerOpen(false)}
+        order={trackedOrder || confirmedOrder || orders[0] || null}
+        allOrders={orders}
+        onSelectOrder={(ord) => setTrackedOrder(ord)}
+      />
+
+      {/* 8. StylePass Royalty Club Membership Modal */}
+      <MembershipModal
+        isOpen={isMembershipOpen}
+        onClose={() => setIsMembershipOpen(false)}
+        userMembership={userMembership}
+        onActivatePlan={handleActivateMembership}
+        onCancelMembership={handleCancelMembership}
+      />
+
+      {/* 9. Share & Public Access Modal */}
       <ShareModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}

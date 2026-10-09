@@ -10,7 +10,9 @@ import {
   ArrowRight,
   Download,
   Sparkles,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Navigation,
+  Zap
 } from 'lucide-react';
 import { Order } from '../types';
 import { formatINR, formatDisplayDate } from '../utils/rentalCalculations';
@@ -19,22 +21,26 @@ interface OrderConfirmationModalProps {
   order: Order | null;
   onClose: () => void;
   onOpenAdmin: () => void;
+  onOpenTracking?: () => void;
 }
 
 export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
   order,
   onClose,
   onOpenAdmin,
+  onOpenTracking,
 }) => {
   if (!order) return null;
 
   const firstItem = order.items[0];
+  const isExpress2Hr = order.deliverySpeed === 'express_2hr';
+  const isSameDay = order.deliverySpeed === 'same_day';
 
   const timelineSteps = [
     { title: 'Order Confirmed', desc: 'Payment verified & booking reserved', active: true, done: true },
-    { title: 'Preparing', desc: 'Hospital-grade dry clean & sanitization', active: true, done: false },
-    { title: 'Shipped', desc: 'Packed in reusable zip bag with label', active: false, done: false },
-    { title: 'Delivered', desc: 'Doorstep drop 1 day before event', active: false, done: false },
+    { title: 'Preparing', desc: 'Hospital-grade dry clean & sanitization', active: true, done: isExpress2Hr },
+    { title: 'Dispatched', desc: 'Packed in reusable zip bag with label', active: isExpress2Hr, done: isExpress2Hr },
+    { title: 'Out for Delivery', desc: isExpress2Hr ? '⚡ Priority rider en route (under 120 mins)' : 'Doorstep drop 1 day before event', active: isExpress2Hr, done: false },
     { title: 'Return Pickup', desc: 'Courier picks up packed reusable bag', active: false, done: false },
     { title: 'Quality Check', desc: 'Staff checks garment integrity', active: false, done: false },
     { title: 'Deposit Refunded', desc: 'Security deposit released to UPI', active: false, done: false },
@@ -65,10 +71,56 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
           <p className="text-xs text-stone-600 mt-1">
             Order Reference: <span className="font-mono font-bold text-[#53101E]">{order.orderId}</span>
           </p>
+
+          {/* Delivery speed alert */}
+          {isExpress2Hr && (
+            <div className="mt-3 p-2.5 rounded-xl bg-amber-500/15 border border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-center gap-2">
+              <Zap className="w-4 h-4 text-amber-600 fill-amber-500" />
+              <span>⚡ 2-Hour SOS Emergency Delivery Active! Priority rider is dispatched right now.</span>
+            </div>
+          )}
+
+          {isSameDay && (
+            <div className="mt-3 p-2.5 rounded-xl bg-emerald-100/70 border border-emerald-300 text-emerald-950 text-xs font-bold flex items-center justify-center gap-2">
+              <Truck className="w-4 h-4 text-emerald-700" />
+              <span>🚚 Same-Day Delivery Active! Delivering today before 8 PM.</span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
+          {/* Live tracking quick launch card */}
+          {order.tracking && onOpenTracking && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-stone-900 to-[#3B0913] text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 text-stone-950 flex items-center justify-center font-bold">
+                  <Navigation className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                    Live Location Tracking Active
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                  </h4>
+                  <p className="text-xs text-stone-300">
+                    Rider: {order.tracking.riderName} · ETA: <strong>{order.tracking.etaMinutes} mins</strong> · OTP: <span className="font-mono font-bold text-emerald-400">{order.tracking.deliveryOtp}</span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenTracking();
+                }}
+                className="px-4 py-2 rounded-xl bg-[#DFC07A] text-[#53101E] font-bold text-xs hover:bg-[#C69947] transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+              >
+                <span>Track on Live Map</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Outfits Summary */}
           <div className="space-y-3">
             <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
@@ -79,7 +131,7 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
               <div key={idx} className="flex gap-4 p-3 bg-stone-50 rounded-2xl border border-stone-200">
                 <img 
                   src={item.product.images[0]} 
-                  alt={item.product.name}
+                  alt={item.product.name} 
                   referrerPolicy="no-referrer"
                   className="w-16 h-20 rounded-xl object-cover object-top border border-stone-200"
                 />
@@ -88,35 +140,37 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
                   <p className="text-stone-500">
                     Size: <strong className="text-stone-800">{item.selectedSize}</strong> 
                     {item.hasBackupSize && ` · Backup Size: ${item.backupSize}`}
+                    <span> · {item.rentalDuration} Day Rental</span>
                   </p>
                   <p className="text-stone-600">
                     Rental Dates: <strong>{formatDisplayDate(item.startDate)}</strong> to <strong>{formatDisplayDate(item.returnDate)}</strong>
                   </p>
                   <div className="flex items-center gap-2 pt-1 text-[11px] text-emerald-700 font-semibold">
                     <Truck className="w-3.5 h-3.5" />
-                    <span>Doorstep Delivery: {formatDisplayDate(item.deliveryDate)}</span>
+                    <span>
+                      {isExpress2Hr 
+                        ? '⚡ Delivery Window: Within next 120 minutes' 
+                        : isSameDay 
+                          ? '🚚 Doorstep Delivery: Today' 
+                          : `Doorstep Delivery: ${formatDisplayDate(item.deliveryDate)}`}
+                    </span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Key Dates & Deposit details */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
-              <span className="text-emerald-800 font-semibold block">Refundable Security Deposit</span>
-              <p className="text-base font-bold text-emerald-950">
-                {formatINR(order.pricing.totalSecurityDeposit)}
-              </p>
-              <p className="text-[10px] text-emerald-800">
-                Refunds to your UPI/Account within 48h after return inspection.
-              </p>
+          {/* Pricing summary */}
+          <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 flex items-center justify-between text-xs">
+            <div>
+              <p className="text-stone-500">Total Paid Amount</p>
+              <p className="text-xl font-bold text-[#53101E]">{formatINR(order.pricing.grandTotal)}</p>
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-[#53101E]/5 border border-[#53101E]/20 space-y-1">
-              <span className="text-[#53101E] font-semibold block">Total Amount Paid</span>
-              <p className="text-base font-bold text-[#53101E]">
-                {formatINR(order.pricing.grandTotal)}
+            <div className="text-right">
+              <p className="text-emerald-800 font-semibold">
+                {order.pricing.totalSecurityDeposit === 0 
+                  ? 'Zero Deposit (StylePass Benefit)' 
+                  : `${formatINR(order.pricing.totalSecurityDeposit)} Refundable Deposit`}
               </p>
               <p className="text-[10px] text-stone-600">
                 Via {order.paymentMethod.toUpperCase()} (Demo Verified)
@@ -167,19 +221,34 @@ export const OrderConfirmationModal: React.FC<OrderConfirmationModalProps> = ({
 
         {/* Footer Actions */}
         <div className="p-4 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3">
-          <button
-            onClick={onOpenAdmin}
-            className="px-4 py-2 text-xs font-semibold rounded-full bg-stone-200 text-stone-800 hover:bg-stone-300 transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Track in Admin Dashboard</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onOpenTracking && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenTracking();
+                }}
+                className="px-4 py-2 text-xs font-bold rounded-full bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                <span>📍 Live Track Delivery</span>
+              </button>
+            )}
+
+            <button
+              onClick={onOpenAdmin}
+              className="px-4 py-2 text-xs font-semibold rounded-full bg-stone-200 text-stone-800 hover:bg-stone-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Admin Portal</span>
+            </button>
+          </div>
 
           <button
             onClick={onClose}
             className="px-6 py-2.5 text-xs font-bold rounded-full bg-[#53101E] text-white hover:bg-[#3B0913] transition-colors cursor-pointer"
           >
-            Continue to Homepage
+            Continue Browsing
           </button>
         </div>
       </div>

@@ -69,6 +69,64 @@ export interface Review {
   verifiedRent: boolean;
 }
 
+export type RentalDuration = 1 | 3 | 7 | 10;
+
+export type DeliverySpeed = 'standard' | 'same_day' | 'express_2hr';
+
+export interface DeliveryTracking {
+  trackingNumber: string;
+  orderId: string;
+  customerName: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  deliveryCity: string;
+  deliverySpeed: DeliverySpeed;
+  riderName: string;
+  riderPhone: string;
+  riderVehicle: string;
+  riderRating: number;
+  currentStep: 'confirmed' | 'sanitizing' | 'dispatched' | 'out_for_delivery' | 'arrived' | 'delivered';
+  etaMinutes: number;
+  deliveryOtp: string;
+  riderLat: number;
+  riderLng: number;
+  destLat: number;
+  destLng: number;
+  hubName: string;
+  updatedAt: string;
+  statusNotes?: string;
+}
+
+export interface MembershipPlan {
+  id: string;
+  name: string;
+  tier: 'silver' | 'gold' | 'vip';
+  tagline: string;
+  price: number;
+  billingCycle: 'monthly' | 'quarterly' | 'annual';
+  badge: string;
+  popular?: boolean;
+  securityDepositWaiver: boolean; // Zero security deposit
+  freeSameDayDelivery: boolean;
+  express2HrFee: number; // e.g. 149 instead of 299
+  freeBackupSize: boolean;
+  rentalDiscountPercent: number; // 10% or 15%
+  extendedGraceHours: number; // 24 hours
+  customerBenefits: string[];
+  adminProfitabilityMetrics: string[];
+}
+
+export interface UserMembership {
+  isActive: boolean;
+  planId: string;
+  planName: string;
+  tier: 'silver' | 'gold' | 'vip';
+  startedAt: string;
+  expiresAt: string;
+  totalSavedAmount: number;
+  rentalsCompleted: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -80,6 +138,7 @@ export interface Product {
   fabric: string;
   description: string;
   careInfo: string;
+  rentalPrice1Day?: number;
   rentalPrice3Days: number;
   rentalPrice7Days: number;
   rentalPrice10Days: number;
@@ -104,7 +163,7 @@ export interface CartItem {
   selectedSize: Size;
   fittingOption: FittingOption;
   customMeasurements?: CustomMeasurements;
-  rentalDuration: 3 | 7 | 10;
+  rentalDuration: RentalDuration;
   startDate: string; // YYYY-MM-DD
   endDate: string;   // YYYY-MM-DD
   deliveryDate: string; // YYYY-MM-DD
@@ -117,6 +176,7 @@ export interface CartItem {
   hasDamageProtection: boolean;
   protectionFee: number;
   quantity: number;
+  deliverySpeed?: DeliverySpeed;
 }
 
 export interface CustomerDetails {
@@ -143,12 +203,18 @@ export interface Order {
   createdAt: string;
   customer: CustomerDetails;
   items: CartItem[];
+  deliverySpeed: DeliverySpeed;
+  tracking?: DeliveryTracking;
+  membershipApplied?: boolean;
+  membershipSavings?: number;
   pricing: {
     totalRentalFee: number;
     totalSecurityDeposit: number;
     totalBackupFee: number;
     totalProtectionFee: number;
     deliveryFee: number;
+    deliverySpeedFee: number;
+    membershipDiscount: number;
     discount: number;
     grandTotal: number;
   };

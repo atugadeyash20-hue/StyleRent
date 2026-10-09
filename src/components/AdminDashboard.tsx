@@ -15,11 +15,20 @@ import {
   ArrowRight,
   ShieldCheck,
   Search,
-  Filter
+  Filter,
+  Navigation,
+  Zap,
+  Crown,
+  TrendingUp,
+  DollarSign,
+  Bike,
+  Clock,
+  Phone
 } from 'lucide-react';
 import { Order, Product } from '../types';
 import { formatINR, formatDisplayDate } from '../utils/rentalCalculations';
 import { getPublicShareUrl } from './ShareModal';
+import { MEMBERSHIP_PLANS } from '../data/mockData';
 import { Share2, Copy, Check } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -30,6 +39,7 @@ interface AdminDashboardProps {
   onUpdateOrderStatus: (orderId: string, newStatus: Order['status']) => void;
   onUpdateProductStatus: (productId: string, newStatus: Product['status']) => void;
   onProcessInspection: (orderId: string, inspection: NonNullable<Order['returnInspection']>) => void;
+  onOpenTrackingWithOrder?: (order: Order) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -40,10 +50,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateOrderStatus,
   onUpdateProductStatus,
   onProcessInspection,
+  onOpenTrackingWithOrder,
 }) => {
   if (!isOpen) return null;
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'inventory' | 'inspection'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'dispatch' | 'inventory' | 'inspection' | 'memberships'>('orders');
   const [shareCopied, setShareCopied] = useState(false);
 
   const handleCopyPublicUrl = () => {
@@ -137,10 +148,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-6 py-2.5 bg-stone-100 border-b border-stone-200 flex gap-2">
+        <div className="px-6 py-2.5 bg-stone-100 border-b border-stone-200 flex flex-wrap gap-2">
           <button
             onClick={() => setActiveTab('orders')}
-            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'orders'
                 ? 'bg-white text-[#53101E] shadow-2xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -150,8 +161,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('dispatch')}
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'dispatch'
+                ? 'bg-[#53101E] text-white shadow-2xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Navigation className="w-3.5 h-3.5 text-[#DFC07A]" />
+            <span>Live Dispatches & GPS Tracking</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('inventory')}
-            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'inventory'
                 ? 'bg-white text-[#53101E] shadow-2xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -162,13 +185,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('inspection')}
-            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               activeTab === 'inspection'
                 ? 'bg-white text-[#53101E] shadow-2xs'
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             Return Inspection Simulator
+          </button>
+
+          <button
+            onClick={() => setActiveTab('memberships')}
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'memberships'
+                ? 'bg-[#DFC07A] text-[#53101E] font-bold shadow-2xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Crown className="w-3.5 h-3.5 text-[#53101E]" />
+            <span>StylePass Memberships & Profitability</span>
           </button>
         </div>
 
@@ -464,6 +499,257 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Confirm Inspection & Release {formatINR(finalRefundAmount)}</span>
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: DISPATCHES & LIVE GPS TRACKING */}
+          {activeTab === 'dispatch' && (
+            <div className="space-y-6">
+              {/* Summary KPIs */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-300">
+                  <div className="flex items-center gap-2 text-amber-800 text-xs font-bold uppercase tracking-wider">
+                    <Zap className="w-4 h-4 text-amber-600 fill-amber-500" />
+                    <span>2-Hr SOS Emergency</span>
+                  </div>
+                  <p className="text-2xl font-bold font-cinzel text-amber-950 mt-1">
+                    {orders.filter(o => o.deliverySpeed === 'express_2hr').length}
+                  </p>
+                  <p className="text-[11px] text-amber-700 mt-0.5">High Priority (+₹299 surcharge)</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                  <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+                    <Truck className="w-4 h-4 text-emerald-600" />
+                    <span>Same-Day Dispatches</span>
+                  </div>
+                  <p className="text-2xl font-bold font-cinzel text-emerald-950 mt-1">
+                    {orders.filter(o => o.deliverySpeed === 'same_day').length}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">Deliver today before 8 PM</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-stone-100 border border-stone-200">
+                  <div className="flex items-center gap-2 text-stone-700 text-xs font-bold uppercase tracking-wider">
+                    <Package className="w-4 h-4 text-stone-500" />
+                    <span>Standard Scheduled</span>
+                  </div>
+                  <p className="text-2xl font-bold font-cinzel text-stone-900 mt-1">
+                    {orders.filter(o => !o.deliverySpeed || o.deliverySpeed === 'standard').length}
+                  </p>
+                  <p className="text-[11px] text-stone-500 mt-0.5">Delivered 1 day prior to event</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#53101E]/10 border border-[#53101E]/20">
+                  <div className="flex items-center gap-2 text-[#53101E] text-xs font-bold uppercase tracking-wider">
+                    <Bike className="w-4 h-4 text-[#53101E]" />
+                    <span>Active Riders En Route</span>
+                  </div>
+                  <p className="text-2xl font-bold font-cinzel text-[#53101E] mt-1">
+                    {orders.filter(o => o.tracking && o.tracking.currentStep !== 'delivered').length}
+                  </p>
+                  <p className="text-[11px] text-stone-600 mt-0.5">With live OTP security</p>
+                </div>
+              </div>
+
+              {/* Dispatches Table */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-stone-600">
+                  <span className="font-bold text-stone-900">Doorstep Courier & Rider Fleet Status</span>
+                  <span>Click "Open Live GPS Tracker" to view map & simulate location</span>
+                </div>
+
+                <div className="overflow-x-auto border border-stone-200 rounded-2xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#FAF7F2] text-stone-700 font-bold uppercase tracking-wider border-b border-stone-200">
+                      <tr>
+                        <th className="p-3.5">Order & Speed</th>
+                        <th className="p-3.5">Customer & Destination</th>
+                        <th className="p-3.5">Rider & Vehicle</th>
+                        <th className="p-3.5">ETA / OTP</th>
+                        <th className="p-3.5">Live Delivery Status</th>
+                        <th className="p-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-200">
+                      {orders.map((o) => {
+                        const tr = o.tracking;
+                        return (
+                          <tr key={o.orderId} className="hover:bg-stone-50/80 transition-colors">
+                            <td className="p-3.5 font-mono">
+                              <span className="font-bold text-[#53101E]">{o.orderId}</span>
+                              <div className="mt-1">
+                                {o.deliverySpeed === 'express_2hr' ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                    <Zap className="w-3 h-3 fill-amber-500 text-amber-600" />
+                                    ⚡ 2-Hr SOS (+₹299)
+                                  </span>
+                                ) : o.deliverySpeed === 'same_day' ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                    <Truck className="w-3 h-3 text-emerald-700" />
+                                    🚚 Same-Day
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-stone-100 text-stone-600 border border-stone-200">
+                                    Standard 1-Day Prior
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3.5">
+                              <p className="font-bold text-stone-900">{o.customer.fullName}</p>
+                              <p className="text-[11px] text-stone-500">{o.customer.address}, {o.customer.city} ({o.customer.pincode})</p>
+                              <p className="text-[10px] text-stone-400">{o.customer.phone}</p>
+                            </td>
+                            <td className="p-3.5">
+                              {tr ? (
+                                <div>
+                                  <p className="font-bold text-stone-800 flex items-center gap-1">
+                                    <Bike className="w-3.5 h-3.5 text-[#53101E]" />
+                                    {tr.riderName}
+                                  </p>
+                                  <p className="text-[11px] text-stone-500 font-mono">{tr.riderVehicle}</p>
+                                  <p className="text-[10px] text-stone-400">{tr.riderPhone}</p>
+                                </div>
+                              ) : (
+                                <span className="text-stone-400 italic">Dispatch queued</span>
+                              )}
+                            </td>
+                            <td className="p-3.5">
+                              {tr ? (
+                                <div>
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800">
+                                    <Clock className="w-3 h-3" />
+                                    {tr.etaMinutes} mins
+                                  </span>
+                                  <div className="text-[10px] text-stone-500 mt-0.5">
+                                    OTP: <strong className="font-mono text-stone-900">{tr.deliveryOtp}</strong>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-stone-400">—</span>
+                              )}
+                            </td>
+                            <td className="p-3.5">
+                              <span className="capitalize px-2 py-0.5 rounded-md text-[11px] font-semibold bg-stone-100 text-stone-700 border border-stone-200">
+                                {tr ? tr.currentStep.replace(/_/g, ' ') : o.status}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              {onOpenTrackingWithOrder && (
+                                <button
+                                  onClick={() => {
+                                    onClose();
+                                    onOpenTrackingWithOrder(o);
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-[#53101E] hover:bg-[#3B0913] text-white text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                >
+                                  <Navigation className="w-3 h-3 text-[#DFC07A]" />
+                                  <span>Track Live Map</span>
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: MEMBERSHIPS & UNIT ECONOMICS */}
+          {activeTab === 'memberships' && (
+            <div className="space-y-6">
+              {/* Strategic Header */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-[#53101E] to-[#3B0913] text-white space-y-2">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-[#DFC07A]" />
+                  <h4 className="font-cinzel text-base font-bold text-[#DFC07A]">
+                    StylePass Fashion Royalty Membership Economics
+                  </h4>
+                </div>
+                <p className="text-xs text-stone-200 leading-relaxed max-w-3xl">
+                  Designed to solve the biggest customer friction in luxury rental (high security deposits) while dramatically expanding business profitability, recurring revenue (MRR), and repeat rental frequency.
+                </p>
+              </div>
+
+              {/* Profitability & Risk Mitigation Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl border border-stone-200 bg-white space-y-3">
+                  <div className="flex items-center gap-2 text-stone-900 font-bold text-xs uppercase tracking-wider">
+                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    <span>Why it's Profitable for Admin & Business</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-stone-600">
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-600 font-bold">1.</span>
+                      <span><strong>High-Margin Recurring Revenue (MRR):</strong> Subscription fees (₹1,499/mo or ₹9,999/yr) carry an 82% gross margin, providing predictable cash flow regardless of rental seasonality.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-600 font-bold">2.</span>
+                      <span><strong>3.8x Higher Customer Lifetime Value (LTV):</strong> Members rent 4.6 times a year (festivals, weddings, work galas) vs 1.2 times for guest renters.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-600 font-bold">3.</span>
+                      <span><strong>Accelerated Inventory Payback:</strong> High member turnover amortizes the designer wholesale purchase price in under 4.5 months.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="p-4 rounded-2xl border border-stone-200 bg-white space-y-3">
+                  <div className="flex items-center gap-2 text-stone-900 font-bold text-xs uppercase tracking-wider">
+                    <ShieldCheck className="w-4 h-4 text-[#53101E]" />
+                    <span>How Zero Deposit Risk is Mitigated</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-stone-600">
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#53101E] font-bold">1.</span>
+                      <span><strong>Mandatory KYC Verification:</strong> StylePass members submit verified government ID (Aadhaar OTP / PAN) before membership activation.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#53101E] font-bold">2.</span>
+                      <span><strong>Pre-Authorized Card on File:</strong> A tokenized card authorization protects against unreturned or malicious damage without tying up customer cash.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-[#53101E] font-bold">3.</span>
+                      <span><strong>Historical Default Rate &lt; 0.4%:</strong> Members value their long-term subscription standing and maintain pristine garment condition.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Membership Plans Snapshot */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
+                  Active Subscription Plans Overview
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {MEMBERSHIP_PLANS.map((plan) => (
+                    <div key={plan.id} className="p-4 rounded-2xl border border-stone-200 bg-stone-50 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-stone-900">{plan.name}</span>
+                        {plan.popular && (
+                          <span className="text-[10px] font-bold uppercase bg-[#DFC07A] text-[#53101E] px-2 py-0.5 rounded-full">
+                            Most Popular
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-xl font-bold text-[#53101E]">{formatINR(plan.price)}</span>
+                        <span className="text-xs text-stone-500"> / {plan.billingCycle}</span>
+                      </div>
+                      <div className="text-[11px] text-stone-600 space-y-1 pt-2 border-t border-stone-200">
+                        <p>✓ {plan.securityDepositWaiver ? '100% Zero Security Deposit Waived' : '50% Security Deposit Waived'}</p>
+                        <p>✓ {plan.express2HrFee === 0 ? 'Free 2-Hr SOS Express Deliveries' : `Discounted 2-Hr SOS (${formatINR(plan.express2HrFee)})`}</p>
+                        <p>✓ {plan.freeSameDayDelivery ? 'Free Same-Day Deliveries Included' : 'Standard Delivery Included'}</p>
+                        <p>✓ Flat {plan.rentalDiscountPercent}% Off Entire Outfit Catalog</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

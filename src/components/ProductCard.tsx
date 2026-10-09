@@ -148,12 +148,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-base font-bold text-[#53101E]">
-                {formatINR(product.rentalPrice3Days)}
+                {formatINR(product.rentalPrice1Day || Math.round(product.rentalPrice3Days * 0.7))}
               </span>
-              <span className="text-xs text-stone-500 font-normal">/ 3 Days</span>
+              <span className="text-xs text-stone-500 font-normal">/ 1 Day</span>
             </div>
-            <div className="text-[10px] text-stone-400">
-              Retail: <span className="line-through">{formatINR(product.retailValue)}</span>
+            <div className="text-[10px] text-stone-500 flex items-center gap-1.5 mt-0.5">
+              <span>3 Days: <strong>{formatINR(product.rentalPrice3Days)}</strong></span>
+              <span>·</span>
+              <span className="text-amber-700 font-medium">⚡ 2-Hr SOS</span>
             </div>
           </div>
 

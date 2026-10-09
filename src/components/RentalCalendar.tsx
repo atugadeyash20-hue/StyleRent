@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Truck
 } from 'lucide-react';
-import { BookingDateRange } from '../types';
+import { BookingDateRange, RentalDuration } from '../types';
 import { 
   calculateRentalDates, 
   formatDateISO, 
@@ -22,8 +22,8 @@ import {
 interface RentalCalendarProps {
   bookings: BookingDateRange[];
   selectedStartDate: string;
-  durationDays: 3 | 7 | 10;
-  onDurationChange: (days: 3 | 7 | 10) => void;
+  durationDays: RentalDuration;
+  onDurationChange: (days: RentalDuration) => void;
   onStartDateChange: (dateStr: string) => void;
 }
 
@@ -133,21 +133,27 @@ export const RentalCalendar: React.FC<RentalCalendarProps> = ({
           <span className="text-xs text-stone-500">Pick event duration</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          {([3, 7, 10] as const).map((days) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {([1, 3, 7, 10] as const).map((days) => (
             <button
               key={days}
               type="button"
               onClick={() => onDurationChange(days)}
-              className={`py-2 px-3 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center ${
+              className={`py-2 px-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer text-center ${
                 durationDays === days
                   ? 'bg-[#53101E] text-white border-[#53101E] shadow-xs'
                   : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 hover:border-stone-300'
               }`}
             >
-              {days} Days Rental
-              <span className="block text-[10px] font-normal opacity-80">
-                {days === 3 ? 'Weekend / Party' : days === 7 ? 'Full Wedding Week' : 'Destination Wedding'}
+              {days === 1 ? '1 Day Rental' : `${days} Days Rental`}
+              <span className="block text-[10px] font-normal opacity-80 mt-0.5">
+                {days === 1 
+                  ? 'Single Day / Shoot' 
+                  : days === 3 
+                    ? 'Weekend / Party' 
+                    : days === 7 
+                      ? 'Full Wedding Week' 
+                      : 'Destination Wedding'}
               </span>
             </button>
           ))}

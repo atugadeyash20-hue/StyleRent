@@ -12,7 +12,9 @@ import {
   ExternalLink,
   Users,
   Smartphone,
-  ShieldCheck
+  ShieldCheck,
+  Download,
+  FolderArchive
 } from 'lucide-react';
 
 interface ShareModalProps {
@@ -20,15 +22,20 @@ interface ShareModalProps {
   onClose: () => void;
 }
 
+export const SHARED_APP_URL = 'https://ais-pre-bhqatkonulyfu5bb5sbu4s-698741090226.asia-southeast1.run.app';
+
 export const getPublicShareUrl = (): string => {
   if (typeof window !== 'undefined' && window.location) {
     try {
-      return window.location.href.split('#')[0];
+      const href = window.location.href;
+      if (href && !href.includes('localhost') && !href.includes('127.0.0.1') && !href.includes('about:')) {
+        return href.split('#')[0];
+      }
     } catch (e) {
       // fallback
     }
   }
-  return '';
+  return SHARED_APP_URL;
 };
 
 export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
@@ -211,6 +218,42 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
                 <Smartphone className="w-4 h-4 text-purple-600" />
                 Device Share
               </button>
+            </div>
+          </div>
+
+          {/* Project Source Code & ZIP Download Section */}
+          <div className="pt-3 border-t border-stone-200">
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FolderArchive className="w-4 h-4 text-[#53101E]" />
+                  <span className="text-xs font-bold text-stone-900">Project Code ZIP (Folder-wise)</span>
+                </div>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">
+                  Viva & Demo Ready
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-600 leading-snug">
+                Download the complete codebase bundled folder-wise with React, TypeScript, Tailwind CSS, mock data, and components.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <a
+                  href="/style-rent-project.zip"
+                  download="style-rent-project.zip"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#53101E] hover:bg-[#3B0913] text-white rounded-lg text-xs font-bold transition-colors shadow-2xs cursor-pointer text-center"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Full Project (.ZIP)
+                </a>
+                <a
+                  href="/style-rent-source-code.zip"
+                  download="style-rent-source-code.zip"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-lg text-xs font-bold transition-colors cursor-pointer text-center"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Source Code (.ZIP)
+                </a>
+              </div>
             </div>
           </div>
 

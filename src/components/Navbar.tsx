@@ -9,9 +9,14 @@ import {
   X, 
   Search,
   Briefcase,
-  Share2
+  Share2,
+  Truck,
+  Crown,
+  Zap,
+  Navigation
 } from 'lucide-react';
 import { formatINR } from '../utils/rentalCalculations';
+import { UserMembership } from '../types';
 
 interface NavbarProps {
   cartCount: number;
@@ -21,6 +26,9 @@ interface NavbarProps {
   onOpenWishlist: () => void;
   onOpenAdmin: () => void;
   onOpenShare: () => void;
+  onOpenMembership: () => void;
+  onOpenTracking: () => void;
+  userMembership?: UserMembership | null;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onNavigateSection: (sectionId: string) => void;
@@ -35,12 +43,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenWishlist,
   onOpenAdmin,
   onOpenShare,
+  onOpenMembership,
+  onOpenTracking,
+  userMembership,
   searchQuery,
   onSearchChange,
   onNavigateSection,
   onFilterCategory,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMember = userMembership?.isActive || false;
 
   return (
     <header className="sticky top-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-stone-200">
@@ -49,16 +61,35 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-[#DFC07A]" />
           <span>
-            Rent Luxury Outfits: Royal Sherwanis, Italian Formals, Stage Costumes & Casual Sets from ₹799 · Free 2-Way Doorstep Delivery
+            Rent Luxury Outfits from ₹599/day · ⚡ 2-Hr SOS Emergency Delivery · 🚚 Same-Day Service
           </span>
         </div>
-        <button
-          onClick={onOpenShare}
-          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#DFC07A] bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-full border border-[#DFC07A]/40 transition-colors cursor-pointer"
-        >
-          <Share2 className="w-3 h-3" />
-          <span>Share Public Link</span>
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenMembership}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#DFC07A] bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-full border border-[#DFC07A]/40 transition-colors cursor-pointer"
+          >
+            <Crown className="w-3 h-3 text-[#DFC07A]" />
+            <span>{isMember ? '👑 StylePass Active (0% Deposit)' : '👑 StylePass: 0% Deposit'}</span>
+          </button>
+
+          <button
+            onClick={onOpenTracking}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40 transition-colors cursor-pointer"
+          >
+            <Navigation className="w-3 h-3 text-emerald-400" />
+            <span>Track Delivery</span>
+          </button>
+
+          <button
+            onClick={onOpenShare}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-stone-200 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+          >
+            <Share2 className="w-3 h-3 text-[#DFC07A]" />
+            <span>Share Link</span>
+          </button>
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -170,11 +201,35 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:inline">Share Link</span>
             </button>
 
+            {/* StylePass Club Shortcut */}
+            <button
+              onClick={onOpenMembership}
+              title="StylePass Royalty Club"
+              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full transition-colors cursor-pointer border shadow-2xs ${
+                isMember
+                  ? 'bg-[#53101E] text-white border-[#DFC07A]'
+                  : 'bg-[#DFC07A]/25 text-[#53101E] border-[#DFC07A]/70 hover:bg-[#DFC07A]/40'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5 text-[#C69947]" />
+              <span>{isMember ? 'StylePass VIP' : 'StylePass Club'}</span>
+            </button>
+
+            {/* Track Delivery shortcut */}
+            <button
+              onClick={onOpenTracking}
+              title="Track Active Delivery & GPS"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-full transition-colors cursor-pointer shadow-2xs"
+            >
+              <Navigation className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Track Delivery</span>
+            </button>
+
             {/* Admin Dashboard shortcut */}
             <button
               onClick={onOpenAdmin}
               title="Admin & Staff Portal"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#53101E] bg-[#53101E]/10 rounded-full hover:bg-[#53101E]/15 transition-colors cursor-pointer"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#53101E] bg-[#53101E]/10 rounded-full hover:bg-[#53101E]/15 transition-colors cursor-pointer"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>Admin / Staff</span>
@@ -305,6 +360,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="text-left px-3 py-2 rounded-lg hover:bg-stone-100"
               >
                 Customer Reviews
+              </button>
+              <button
+                onClick={() => {
+                  onOpenMembership();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-left px-3 py-2.5 rounded-lg bg-[#DFC07A]/25 text-[#53101E] font-bold flex items-center justify-between border border-[#DFC07A]/50"
+              >
+                <span className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-[#C69947]" />
+                  StylePass Royalty Club (0% Deposit)
+                </span>
+                <span className="text-[10px] bg-[#53101E] text-white px-2 py-0.5 rounded-full font-bold">VIP</span>
+              </button>
+              <button
+                onClick={() => {
+                  onOpenTracking();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-left px-3 py-2.5 rounded-lg bg-emerald-50 text-emerald-950 font-bold flex items-center justify-between border border-emerald-200"
+              >
+                <span className="flex items-center gap-2">
+                  <Navigation className="w-4 h-4 text-emerald-700" />
+                  Live Order & GPS Tracking
+                </span>
+                <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">Live</span>
               </button>
               <button
                 onClick={() => {

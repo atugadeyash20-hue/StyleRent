@@ -9,39 +9,55 @@ import {
   Sparkles, 
   ShieldAlert, 
   ArrowRight,
-  Info
+  Info,
+  Crown,
+  Zap,
+  Truck
 } from 'lucide-react';
-import { CartItem } from '../types';
+import { CartItem, UserMembership } from '../types';
 import { formatINR, formatDisplayDate } from '../utils/rentalCalculations';
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
+  userMembership?: UserMembership | null;
   onRemoveItem: (cartItemId: string) => void;
   onToggleProtection: (cartItemId: string) => void;
   onToggleBackup: (cartItemId: string) => void;
   onProceedCheckout: () => void;
+  onOpenMembership?: () => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
   isOpen,
   onClose,
   items,
+  userMembership,
   onRemoveItem,
   onToggleProtection,
   onToggleBackup,
   onProceedCheckout,
+  onOpenMembership,
 }) => {
   if (!isOpen) return null;
 
+  const isMember = userMembership?.isActive || false;
+  const isGoldOrVip = isMember && (userMembership?.tier === 'gold' || userMembership?.tier === 'vip');
+
   // Totals calculations
   const totalRentalFee = items.reduce((acc, item) => acc + item.rentalFee, 0);
-  const totalDeposit = items.reduce((acc, item) => acc + item.securityDeposit, 0);
-  const totalBackupFee = items.reduce((acc, item) => acc + (item.hasBackupSize ? item.backupFee : 0), 0);
+  const rawDeposit = items.reduce((acc, item) => acc + item.securityDeposit, 0);
+  const finalDeposit = isGoldOrVip ? 0 : isMember ? Math.round(rawDeposit * 0.5) : rawDeposit;
+
+  const memberDiscount = isMember ? Math.round(totalRentalFee * 0.1) : 0;
+  const totalBackupFee = items.reduce((acc, item) => {
+    if (!item.hasBackupSize) return acc;
+    return acc + (isMember ? 0 : item.backupFee);
+  }, 0);
+
   const totalProtectionFee = items.reduce((acc, item) => acc + (item.hasDamageProtection ? item.protectionFee : 0), 0);
-  const deliveryFee = 0; // Free 2-way doorstep delivery in demo
-  const grandTotal = totalRentalFee + totalDeposit + totalBackupFee + totalProtectionFee + deliveryFee;
+  const grandTotal = totalRentalFee - memberDiscount + finalDeposit + totalBackupFee + totalProtectionFee;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-stone-900/50 backdrop-blur-xs flex justify-end">
@@ -199,7 +215,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <span>Refundable Security Deposit</span>
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1 rounded-sm">100% Refundable</span>
                 </span>
-                <span className="font-semibold">{formatINR(totalDeposit)}</span>
+                <span className="font-semibold">{formatINR(finalDeposit)}</span>
               </div>
 
               {totalBackupFee > 0 && (
@@ -227,7 +243,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               <p className="text-[10px] text-stone-500 italic text-center pt-1">
-                * {formatINR(totalDeposit)} deposit is automatically refunded to your UPI/card within 48h after return inspection.
+                * {formatINR(finalDeposit)} deposit is automatically refunded to your UPI/card within 48h after return inspection.
               </p>
             </div>
 

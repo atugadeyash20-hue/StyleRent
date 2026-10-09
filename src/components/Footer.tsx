@@ -1,11 +1,13 @@
 import React from 'react';
-import { Sparkles, ShieldCheck, RotateCcw, Heart, Share2 } from 'lucide-react';
+import { Sparkles, ShieldCheck, RotateCcw, Heart, Share2, Download } from 'lucide-react';
 import { CITIES_LIST } from '../data/mockData';
 
 interface FooterProps {
   onNavigateSection: (sectionId: string) => void;
   onOpenAdmin: () => void;
   onOpenShare?: () => void;
+  onOpenTracking?: () => void;
+  onOpenMembership?: () => void;
   onFilterCategory?: (category: string) => void;
 }
 
@@ -13,6 +15,8 @@ export const Footer: React.FC<FooterProps> = ({
   onNavigateSection,
   onOpenAdmin,
   onOpenShare,
+  onOpenTracking,
+  onOpenMembership,
   onFilterCategory,
 }) => {
   return (
@@ -151,8 +155,22 @@ export const Footer: React.FC<FooterProps> = ({
                   Customer Fit Reviews
                 </button>
               </li>
+              {onOpenMembership && (
+                <li>
+                  <button onClick={onOpenMembership} className="text-[#DFC07A] hover:underline font-medium cursor-pointer">
+                    👑 StylePass Membership (0% Deposit)
+                  </button>
+                </li>
+              )}
+              {onOpenTracking && (
+                <li>
+                  <button onClick={onOpenTracking} className="text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer">
+                    ⚡ Track Live Order & GPS
+                  </button>
+                </li>
+              )}
               <li>
-                <button onClick={onOpenAdmin} className="text-[#DFC07A] hover:underline font-medium cursor-pointer">
+                <button onClick={onOpenAdmin} className="text-stone-300 hover:text-white font-medium cursor-pointer">
                   Staff & Operations Portal
                 </button>
               </li>
@@ -167,6 +185,16 @@ export const Footer: React.FC<FooterProps> = ({
                   </button>
                 </li>
               )}
+              <li>
+                <a 
+                  href="/style-rent-project.zip"
+                  download="style-rent-project.zip"
+                  className="inline-flex items-center gap-1.5 text-[#DFC07A] hover:text-[#f3d99d] font-semibold cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download Code (.ZIP)
+                </a>
+              </li>
             </ul>
           </div>
 

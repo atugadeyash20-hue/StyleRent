@@ -34,8 +34,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </h1>
 
             <p className="text-base sm:text-lg text-stone-700 max-w-xl leading-relaxed">
-              Rent iconic men's royal sherwanis with dhoti, double-breasted pinstripe suits, theatrical & mythological costumes, executive power suits, and resort casuals from ₹799. Delivered sanitized to your doorstep in a reusable bag.
+              Rent iconic men's royal sherwanis with dhoti, double-breasted pinstripe suits, theatrical & mythological costumes, and executive power suits from ₹599. Now with <strong>1-Day Quick Rentals</strong>, <strong>Same-Day Delivery</strong>, and emergency <strong>2-Hour SOS Service (+₹299)</strong>.
             </p>
+
+            {/* Feature highlights bar */}
+            <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#53101E]/10 text-[#53101E] font-semibold">
+                <span>🗓️ 1-Day Rentals</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 font-semibold">
+                <span>🚚 Same-Day Service</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-semibold border border-amber-300">
+                <span>⚡ 2-Hr SOS Delivery (+₹299)</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DFC07A]/30 text-[#53101E] font-bold border border-[#DFC07A]/60">
+                <span>👑 StylePass: 0% Deposit</span>
+              </span>
+            </div>
 
             {/* Quick Department Buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-semibold">

@@ -19,7 +19,7 @@ import {
   Share2,
   Check
 } from 'lucide-react';
-import { Product, Size, FittingOption, CustomMeasurements } from '../types';
+import { Product, Size, FittingOption, CustomMeasurements, RentalDuration } from '../types';
 import { RentalCalendar } from './RentalCalendar';
 import { getPublicShareUrl } from './ShareModal';
 import { 
@@ -27,7 +27,8 @@ import {
   formatDateISO, 
   addDays, 
   calculateRentalDates, 
-  isRangeAvailable 
+  isRangeAvailable,
+  getProductRentalFee
 } from '../utils/rentalCalculations';
 
 interface ProductDetailModalProps {
@@ -38,7 +39,7 @@ interface ProductDetailModalProps {
     selectedSize: Size;
     fittingOption: FittingOption;
     customMeasurements?: CustomMeasurements;
-    rentalDuration: 3 | 7 | 10;
+    rentalDuration: RentalDuration;
     startDate: string;
     hasBackupSize: boolean;
     backupSize?: Size;
@@ -75,7 +76,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   // Rental duration & dates state (default start date = 3 days from today)
   const defaultStartDate = formatDateISO(addDays(new Date(), 3));
-  const [rentalDuration, setRentalDuration] = useState<3 | 7 | 10>(3);
+  const [rentalDuration, setRentalDuration] = useState<RentalDuration>(3);
   const [startDate, setStartDate] = useState<string>(defaultStartDate);
 
   // Backup size & damage protection state
@@ -99,12 +100,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     setTimeout(() => setShareCopied(false), 2000);
   };
 
-  // Rental pricing calculation
-  const rentalFee = rentalDuration === 3 
-    ? product.rentalPrice3Days 
-    : rentalDuration === 7 
-      ? product.rentalPrice7Days 
-      : product.rentalPrice10Days;
+  // Rental pricing calculation using getProductRentalFee
+  const rentalFee = getProductRentalFee(product, rentalDuration);
 
   const backupFee = hasBackupSize ? 399 : 0;
   const protectionFee = hasDamageProtection ? 299 : 0;
@@ -364,6 +361,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Express Delivery Highlight Badge */}
+              <div className="bg-amber-500/10 border border-amber-300/80 rounded-xl p-3 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
+                  </span>
+                  <div>
+                    <span className="font-bold text-[#53101E]">⚡ 2-Hour SOS & Same-Day Delivery:</span>
+                    <span className="text-stone-700 ml-1">Need this outfit at the last moment? Dispatched in 120 mins (+₹299)</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold uppercase bg-[#53101E] text-white px-2 py-0.5 rounded-full shrink-0">
+                  Select at Checkout
+                </span>
               </div>
 
               {/* RENTAL CALENDAR (Interactive) */}
