@@ -117,12 +117,7 @@ npm run preview
 
 ---
 
-## 🎓 Group of 4 Presentation Guide (5-7 Minutes)
 
-- **Member 1 (Introduction & Problem Statement):** Explains the idle luxury clothing problem, circular fashion model, and core value proposition.
-- **Member 2 (User Catalog & Custom Tailoring):** Demonstrates dynamic 1-day/3-day pricing, date picker calendar, and bespoke measurement inputs.
-- **Member 3 (Quick Commerce & Live GPS Tracker):** Demonstrates the checkout flow, 2-Hour SOS delivery option (+₹299), 4-digit OTP, and live rider simulation.
-- **Member 4 (StylePass Royalty Club & Admin Operations):** Explains the 0% deposit membership mechanism, unit economics (ROI in 9 rentals), and staff fulfillment QA portal.
 
 ---
 
